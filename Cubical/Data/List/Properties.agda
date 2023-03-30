@@ -3,17 +3,21 @@ module Cubical.Data.List.Properties where
 
 open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Function
+open import Cubical.Foundations.Equiv
 open import Cubical.Foundations.GroupoidLaws
 open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.IdentitySystem
 
 open import Cubical.Data.Empty as ⊥
-open import Cubical.Data.Nat
-open import Cubical.Data.List.Base
-open import Cubical.Data.Fin
+open import Cubical.Data.Nat.Base
 open import Cubical.Data.Sigma
 open import Cubical.Data.Unit
+open import Cubical.Data.Fin
+open import Cubical.Data.List.Base
 
 open import Cubical.Relation.Nullary
+
+open isIdentitySystem
 
 module _ {ℓ} {A : Type ℓ} where
 
@@ -75,26 +79,9 @@ module ListPath {ℓ} {A : Type ℓ} where
   reflCode [] = lift tt
   reflCode (_ ∷ xs) = refl , reflCode xs
 
-  encode : ∀ xs ys → (p : xs ≡ ys) → Cover xs ys
-  encode xs _ = J (λ ys _ → Cover xs ys) (reflCode xs)
-
-  encodeRefl : ∀ xs → encode xs xs refl ≡ reflCode xs
-  encodeRefl xs = JRefl (λ ys _ → Cover xs ys) (reflCode xs)
-
   decode : ∀ xs ys → Cover xs ys → xs ≡ ys
-  decode [] [] _ = refl
-  decode [] (_ ∷ _) (lift ())
-  decode (x ∷ xs) [] (lift ())
+  decode []       []       _       = refl
   decode (x ∷ xs) (y ∷ ys) (p , c) = cong₂ _∷_ p (decode xs ys c)
-
-  decodeRefl : ∀ xs → decode xs xs (reflCode xs) ≡ refl
-  decodeRefl [] = refl
-  decodeRefl (x ∷ xs) = cong (cong₂ _∷_ refl) (decodeRefl xs)
-
-  decodeEncode : ∀ xs ys → (p : xs ≡ ys) → decode xs ys (encode xs ys p) ≡ p
-  decodeEncode xs _ =
-    J (λ ys p → decode xs ys (encode xs ys p) ≡ p)
-      (cong (decode xs xs) (encodeRefl xs) ∙ decodeRefl xs)
 
   isOfHLevelCover : (n : HLevel) (p : isOfHLevel (suc (suc n)) A)
     (xs ys : List A) → isOfHLevel (suc n) (Cover xs ys)
@@ -107,13 +94,19 @@ module ListPath {ℓ} {A : Type ℓ} where
   isOfHLevelCover n p (x ∷ xs) (y ∷ ys) =
     isOfHLevelΣ (suc n) (p x y) (\ _ → isOfHLevelCover n p xs ys)
 
+  ListIds : isIdentitySystem Cover reflCode
+  toPath     ListIds = decode _ _
+  toPathOver ListIds = helper _ _
+    where
+    helper : ∀ xs ys → (p : Cover xs ys) → PathP (λ i → Cover xs (decode xs ys p i)) (reflCode xs) p
+    helper []       []       tt*     = refl
+    helper (x ∷ xs) (y ∷ ys) (p , c) = ΣPathP ((λ i j → p (i ∧ j)) , helper _ _ c)
+
 isOfHLevelList : ∀ {ℓ} (n : HLevel) {A : Type ℓ}
   → isOfHLevel (suc (suc n)) A → isOfHLevel (suc (suc n)) (List A)
 isOfHLevelList n ofLevel xs ys =
-  isOfHLevelRetract (suc n)
-    (ListPath.encode xs ys)
-    (ListPath.decode xs ys)
-    (ListPath.decodeEncode xs ys)
+  isOfHLevelRespectEquiv (suc n)
+    (identitySystem≃PathSpace ListPath.ListIds)
     (ListPath.isOfHLevelCover n ofLevel xs ys)
 
 private variable
@@ -159,7 +152,7 @@ cons≡rev-snoc _ [] = refl
 cons≡rev-snoc x (y ∷ ys) = λ i → cons≡rev-snoc x ys i ++ y ∷ []
 
 isContr[]≡[] : isContr (Path (List A) [] [])
-isContr[]≡[] = refl , ListPath.decodeEncode [] []
+isContr[]≡[] = isOfHLevelRespectEquiv 0 (identitySystem≃PathSpace ListPath.ListIds) isContrUnit*
 
 isPropXs≡[] : isProp (xs ≡ [])
 isPropXs≡[] {xs = []} = isOfHLevelSuc 0 isContr[]≡[]
