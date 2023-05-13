@@ -1,7 +1,7 @@
 {-# OPTIONS --safe #-}
 module Foundations.HLevel.Base where
 
-open import Prim.Data.Nat
+open import Foundations.Nat
 
 open import Foundations.Base
 

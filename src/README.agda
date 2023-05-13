@@ -14,7 +14,7 @@ module README where
 ------------------------------------------------------------------------
 
 -- Builtin/primitives, "machine code" of CuTT and compiler directives.
-import Prim.Everything
+-- import Prim.Everything
 
 -- Basic definitions, the toolset of a civilized man.
 import Foundations.Everything

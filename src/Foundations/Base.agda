@@ -1,15 +1,15 @@
 {-# OPTIONS --safe #-}
 module Foundations.Base where
 
-open import Prim.Type       public
-open import Prim.Interval   public
-open import Prim.Extension  public
-open import Prim.Kan        public
-open import Prim.Glue       public
+open import Foundations.Type.Internal       public
+open import Foundations.Interval.Internal   public
+open import Foundations.Extension.Internal  public
+open import Foundations.Kan.Internal        public
+open import Foundations.Glue.Internal       public
 
-open import Prim.Data.Sigma public
-open import Prim.Data.Pi    public
-open import Prim.Data.Unit  public
+open import Foundation.Sigma.Internal public
+open import Foundation.Pi.Internal    public
+open import Foundation.Unit.Internal  public
 
 
 infixr 30 _∙_
